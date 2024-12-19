@@ -1,49 +1,30 @@
 import express from "express";
+import conectaNaDatabase from "./config/dbConnect.js";
+import routes from "./routes/index.js";
 
-const app = express();
-//
-app.use(express.json());
+const conexao = await conectaNaDatabase();
 
-const livros = [
-    {
-        id: 1,
-        titulo: "O senhor dos anéis"
-    },
-    {
-        id: 2,
-        titulo: "O Hobbit"
-    }
-]
-
-function buscaLivro(id) {
-    return livros.findIndex(livro => {
-        return livro.id === Number(id);
-    })
-}
-
-app.get("/", (req, res) => {
-    res.status(200).send("Curso de Node.js");
+conexao.on("error", (erro) =>{
+    console.error("erro de conexão", erro);
 });
 
-app.get("/livros", (req, res) => {
-    res.status(200).json(livros);
-} );
-
-app.get("/livros/:id", (req, res) => {
-    const index = buscaLivro(req.params.id);
-    res.status(200).json(livros[index]);
+conexao.once("open", ()=>{
+    console.log("Conexão com o banco feita com suceso!");
 })
 
-app.post("/livros", (req, res) => {
-    livros.push(req.body);
-    res.status(201).send("Livro cadastrado com sucesso");
-})
+const app = express();
 
-app.put("/livros/:id", (req, res) => {
+routes(app);
+
+
+app.delete("/livros/:id", (req, res) =>{
     const index = buscaLivro(req.params.id);
-    livros[index].titulo = req.body.titulo;
-    res.status(201).json(livros);
+    livros.slice(index, 1);
+    res.status(200).send("livro removido com sucesso")
 })
 
 
 export default app;
+
+
+// 
